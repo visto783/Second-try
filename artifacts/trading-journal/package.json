@@ -76,6 +76,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@google/genai": "^1.14.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "xlsx": "^0.18.5"
