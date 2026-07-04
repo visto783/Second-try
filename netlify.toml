@@ -1,0 +1,19 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Netlify build config for AI Trading Journal
+# Repo root is the base. pnpm is auto-detected via pnpm-lock.yaml.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[build]
+  # Leave base empty — build runs from repo root so pnpm workspace resolves
+  command = "pnpm install --frozen-lockfile && pnpm --filter @workspace/trading-journal run build:netlify"
+  publish = "artifacts/trading-journal/dist/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PNPM_VERSION = "10"
+
+# SPA fallback — all routes serve index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
