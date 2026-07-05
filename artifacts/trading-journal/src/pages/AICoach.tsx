@@ -2,10 +2,41 @@ import { useAnalytics } from "../hooks/useAnalytics";
 import { InsightCard } from "../components/InsightCard";
 import { EmptyState } from "../components/EmptyState";
 import { Brain, Target, Clock, Calendar, Zap, AlertTriangle, Lightbulb } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export function AICoach() {
   const analytics = useAnalytics();
+
+  const [geminiResponse, setGeminiResponse] = useState("Loading AI analysis...");
+
+  useEffect(() => {
+    if (analytics.totalTrades < 5) return;
+
+    async function loadAI() {
+      try {
+        const response = await fetch("/.netlify/functions/gemini", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(analytics),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setGeminiResponse(data.text);
+        } else {
+          setGeminiResponse(data.error || "Unable to generate AI analysis.");
+        }
+      } catch {
+        setGeminiResponse("Unable to connect to Gemini.");
+      }
+    }
+
+    loadAI();
+  }, [analytics]);
 
   if (analytics.totalTrades < 5) {
     return (
@@ -14,14 +45,14 @@ export function AICoach() {
           <Brain className="w-10 h-10 text-primary" />
           <h1 className="text-3xl font-bold tracking-tight">AI Coach</h1>
         </div>
-        <EmptyState 
-          title="Not enough data" 
+
+        <EmptyState
+          title="Not enough data"
           description={`You have ${analytics.totalTrades} trades. Add at least 5 trades to unlock personalized AI insights and coaching.`}
         />
       </div>
     );
   }
-
   return (
     <div className="space-y-8 pb-20">
       <div className="flex items-center gap-4 mb-8">
@@ -48,9 +79,7 @@ export function AICoach() {
               </li>
             )}
           </ul>
-        </InsightCard>
-
-        <InsightCard title="Time & Day Analysis" icon={<Clock />} delay={0.2}>
+<InsightCard title="Time & Day Analysis" icon={<Clock />} delay={0.2}>
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-1">●</span>
@@ -76,15 +105,15 @@ export function AICoach() {
               <span className="font-mono">{analytics.consistencyScore.toFixed(0)}/100</span>
             </div>
             <div className="h-2 bg-secondary rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-cyan-400" 
+              <div
+                className="h-full bg-gradient-to-r from-primary to-cyan-400"
                 style={{ width: `${analytics.consistencyScore}%` }}
               />
             </div>
           </div>
           <p>
-            {analytics.longestLoseStreak > 3 
-              ? "You tend to go on tilt after consecutive losses. Implement a hard stop after 2 losses in a row." 
+            {analytics.longestLoseStreak > 3
+              ? "You tend to go on tilt after consecutive losses. Implement a hard stop after 2 losses in a row."
               : "You show good emotional control during drawdowns. Keep protecting your downside."}
           </p>
         </InsightCard>
@@ -94,23 +123,38 @@ export function AICoach() {
             <Lightbulb className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-lg text-primary">Top Action Items</h3>
           </div>
+
           <ul className="space-y-4">
             {analytics.aiInsights.slice(0,3).map((insight, i) => (
-              <motion.li 
+              <motion.li
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + (i * 0.1) }}
-                key={i} 
+                key={i}
                 className="flex items-start gap-3 text-sm md:text-base"
               >
                 <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 font-medium text-xs mt-0.5">
                   {i + 1}
                 </div>
+
                 <span className="leading-relaxed">{insight}</span>
               </motion.li>
             ))}
           </ul>
         </div>
+
+        <InsightCard
+          title="Gemini AI Coach"
+          icon={<Brain />}
+          delay={0.5}
+        >
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <p className="whitespace-pre-wrap leading-7">
+              {geminiResponse}
+            </p>
+          </div>
+        </InsightCard>
+
       </div>
     </div>
   );
