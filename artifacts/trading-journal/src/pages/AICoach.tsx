@@ -79,7 +79,7 @@ export function AICoach() {
               </li>
             )}
           </ul>
-	</insightcard>
+	</InsightCard>
 <InsightCard title="Time & Day Analysis" icon={<Clock />} delay={0.2}>
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
