@@ -1,5 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 
+const jsonHeaders = {
+  "Content-Type": "application/json",
+};
+
 export default async (request: Request) => {
   try {
     if (request.method !== "POST") {
@@ -7,34 +11,14 @@ export default async (request: Request) => {
         JSON.stringify({ error: "Method not allowed" }),
         {
           status: 405,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({
-          error: "GEMINI_API_KEY is missing",
-        }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: jsonHeaders,
         }
       );
     }
 
     const body = await request.json();
 
-    const ai = new GoogleGenAI({
-      apiKey,
-    });
+    const ai = new GoogleGenAI({});
 
     const prompt = `
 You are an expert Trading Psychology Coach.
@@ -54,7 +38,7 @@ Give response in JSON format:
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
     });
 
@@ -64,22 +48,20 @@ Give response in JSON format:
         text: response.text,
       }),
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: jsonHeaders,
       }
     );
   } catch (e: any) {
+    console.error("Gemini analysis failed", e);
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: e.message,
+        error: "Unable to generate AI analysis.",
       }),
       {
         status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: jsonHeaders,
       }
     );
   }
